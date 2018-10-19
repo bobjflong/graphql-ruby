@@ -130,6 +130,7 @@ module GraphQL
       :relay_node_field,
       :relay_nodes_field,
       :subscription_scope,
+      :subscription_scope_exclude,
       :trace,
       :introspection,
       argument: GraphQL::Define::AssignArgument
@@ -190,6 +191,8 @@ module GraphQL
 
     # @return [nil, String] Prefix for subscription names from this field
     attr_accessor :subscription_scope
+
+    attr_accessor :subscription_scope_exclude
 
     # @return [Boolean] True if this field should be traced. By default, fields are only traced if they are not a ScalarType or EnumType.
     attr_accessor :trace

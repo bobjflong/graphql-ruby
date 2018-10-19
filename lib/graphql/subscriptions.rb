@@ -38,7 +38,7 @@ module GraphQL
     # @param object [Object]
     # @param scope [Symbol, String]
     # @return [void]
-    def trigger(event_name, args, object, scope: nil)
+    def trigger(event_name, args, object, scope: nil, scope_exclude: nil)
       event_name = event_name.to_s
 
       # Try with the verbatim input first:
@@ -64,8 +64,9 @@ module GraphQL
         arguments: normalized_args,
         field: field,
         scope: scope,
+        scope_exclude: scope_exclude,
       )
-      execute_all(event, object)
+      execute_all(event, object, scope_exclude: scope_exclude)
     end
 
     # `event` was triggered on `object`, and `subscription_id` was subscribed,
@@ -106,8 +107,9 @@ module GraphQL
     # @param event [Subscriptions::Event]
     # @param object [Object]
     # @return [void]
-    def execute_all(event, object)
+    def execute_all(event, object, scope_exclude: nil)
       each_subscription_id(event) do |subscription_id|
+        raise NotImplementedError if scope_exclude != nil
         execute(subscription_id, event, object)
       end
     end

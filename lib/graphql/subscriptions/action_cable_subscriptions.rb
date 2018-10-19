@@ -93,10 +93,10 @@ module GraphQL
 
       # An event was triggered; Push the data over ActionCable.
       # Subscribers will re-evaluate locally.
-      def execute_all(event, object)
+      def execute_all(event, object, scope_exclude: nil)
         stream = EVENT_PREFIX + event.topic
         message = @serializer.dump(object)
-        ActionCable.server.broadcast(stream, message)
+        ActionCable.server.broadcast(stream, [message, scope_exclude])
       end
 
       # This subscription was re-evaluated.
@@ -117,10 +117,18 @@ module GraphQL
         channel.stream_from(stream)
         @subscriptions[subscription_id] = query
         events.each do |event|
-          channel.stream_from(EVENT_PREFIX + event.topic, coder: ActiveSupport::JSON) do |message|
-            execute(subscription_id, event, @serializer.load(message))
-            nil
+          channel.stream_from(EVENT_PREFIX + event.topic, coder: ActiveSupport::JSON) do |message_and_scope_exclude|
+            handle_streamed_event(subscription_id, event, message_and_scope_exclude)
           end
+        end
+      end
+
+      def handle_streamed_event(subscription_id, event, message_and_scope_exclude)
+        message = message_and_scope_exclude[0]
+        scope_exclude = message_and_scope_exclude[1]
+        if scope_exclude == nil || (scope_exclude != event.scope_exclude_val)
+          execute(subscription_id, event, @serializer.load(message))
+          nil
         end
       end
 

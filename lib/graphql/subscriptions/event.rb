@@ -20,12 +20,17 @@ module GraphQL
       # @return [String] An opaque string which identifies this event, derived from `name` and `arguments`
       attr_reader :topic
 
-      def initialize(name:, arguments:, field: nil, context: nil, scope: nil)
+      # @return [String] A value that prevents an event from being sent, if it matches against context
+      attr_reader :scope_exclude_val
+
+      def initialize(name:, arguments:, field: nil, context: nil, scope: nil, scope_exclude: "")
         @name = name
         @arguments = arguments
         @context = context
         field ||= context.field
         scope_val = scope || (context && field.subscription_scope && context[field.subscription_scope])
+
+        @scope_exclude_val = scope_exclude || (context && field.subscription_scope_exclude && context[field.subscription_scope_exclude])
 
         @topic = self.class.serialize(name, arguments, field, scope: scope_val)
       end
